@@ -30,6 +30,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.ImplFirebaseTrampolines;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.internal.AuthHttpClient;
+import com.google.firebase.auth.internal.EmulatorHelper;
 import com.google.firebase.auth.internal.ListTenantsResponse;
 import com.google.firebase.internal.ApiClientUtils;
 import com.google.firebase.internal.HttpRequestInfo;
@@ -51,7 +52,7 @@ final class FirebaseTenantClient {
     this(
         ImplFirebaseTrampolines.getProjectId(checkNotNull(app)),
         app.getOptions().getJsonFactory(),
-        ApiClientUtils.newAuthorizedRequestFactory(app, useEmulator()));
+        ApiClientUtils.newAuthorizedRequestFactory(app, EmulatorHelper.useEmulator()));
   }
 
   FirebaseTenantClient(
@@ -60,8 +61,8 @@ final class FirebaseTenantClient {
         "Project ID is required to access the auth service. Use a service account credential or "
             + "set the project ID explicitly via FirebaseOptions. Alternatively you can also "
             + "set the project ID via the GOOGLE_CLOUD_PROJECT environment variable.");
-    if (useEmulator()) {
-      this.tenantMgtBaseUrl = String.format(ID_TOOLKIT_EMULATOR_URL, getEmulatorHost(), "v2", projectId);
+    if (EmulatorHelper.useEmulator()) {
+      this.tenantMgtBaseUrl = String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v2", projectId);
     } else {
       this.tenantMgtBaseUrl = String.format(ID_TOOLKIT_URL, "v2", projectId);
     }
@@ -115,13 +116,5 @@ final class FirebaseTenantClient {
   private static String getTenantUrlSuffix(String tenantId) {
     checkArgument(!Strings.isNullOrEmpty(tenantId), "Tenant ID must not be null or empty.");
     return "/tenants/" + tenantId;
-  }
-
-  private static String getEmulatorHost() {
-    return System.getenv("FIREBASE_AUTH_EMULATOR_HOST");
-  }
-
-  private static boolean useEmulator() {
-    return !Strings.isNullOrEmpty(getEmulatorHost());
   }
 }

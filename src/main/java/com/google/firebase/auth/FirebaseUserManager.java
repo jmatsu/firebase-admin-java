@@ -33,14 +33,7 @@ import com.google.firebase.ErrorCode;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.ImplFirebaseTrampolines;
 import com.google.firebase.IncomingHttpResponse;
-import com.google.firebase.auth.internal.AuthHttpClient;
-import com.google.firebase.auth.internal.BatchDeleteResponse;
-import com.google.firebase.auth.internal.DownloadAccountResponse;
-import com.google.firebase.auth.internal.GetAccountInfoRequest;
-import com.google.firebase.auth.internal.GetAccountInfoResponse;
-import com.google.firebase.auth.internal.ListOidcProviderConfigsResponse;
-import com.google.firebase.auth.internal.ListSamlProviderConfigsResponse;
-import com.google.firebase.auth.internal.UploadAccountResponse;
+import com.google.firebase.auth.internal.*;
 import com.google.firebase.internal.ApiClientUtils;
 import com.google.firebase.internal.HttpRequestInfo;
 import com.google.firebase.internal.NonNull;
@@ -90,9 +83,9 @@ final class FirebaseUserManager {
     final String idToolkitUrlV1;
     final String idToolkitUrlV2;
 
-    if (useEmulator()) {
-      idToolkitUrlV1 = String.format(ID_TOOLKIT_EMULATOR_URL, getEmulatorHost(), "v1", projectId);
-      idToolkitUrlV2 = String.format(ID_TOOLKIT_EMULATOR_URL, getEmulatorHost(), "v2", projectId);
+    if (EmulatorHelper.useEmulator()) {
+      idToolkitUrlV1 = String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v1", projectId);
+      idToolkitUrlV2 = String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v2", projectId);
     } else {
       idToolkitUrlV1 = String.format(ID_TOOLKIT_URL, "v1", projectId);
       idToolkitUrlV2 = String.format(ID_TOOLKIT_URL, "v2", projectId);
@@ -343,14 +336,6 @@ final class FirebaseUserManager {
     return httpClient.sendRequest(HttpRequestInfo.buildJsonPostRequest(url, content), clazz);
   }
 
-  private static String getEmulatorHost() {
-    return System.getenv("FIREBASE_AUTH_EMULATOR_HOST");
-  }
-
-  private static boolean useEmulator() {
-    return !Strings.isNullOrEmpty(getEmulatorHost());
-  }
-
   static class UserImportRequest extends GenericJson {
 
     @Key("users")
@@ -395,7 +380,7 @@ final class FirebaseUserManager {
     return FirebaseUserManager.builder()
         .setProjectId(ImplFirebaseTrampolines.getProjectId(app))
         .setTenantId(tenantId)
-        .setHttpRequestFactory(ApiClientUtils.newAuthorizedRequestFactory(app, useEmulator()))
+        .setHttpRequestFactory(ApiClientUtils.newAuthorizedRequestFactory(app, EmulatorHelper.useEmulator()))
         .setJsonFactory(app.getOptions().getJsonFactory())
         .build();
   }
