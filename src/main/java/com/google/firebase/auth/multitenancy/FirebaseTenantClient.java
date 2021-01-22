@@ -51,7 +51,7 @@ final class FirebaseTenantClient {
     this(
         ImplFirebaseTrampolines.getProjectId(checkNotNull(app)),
         app.getOptions().getJsonFactory(),
-        ApiClientUtils.newAuthorizedRequestFactory(app));
+        ApiClientUtils.newAuthorizedRequestFactory(app, useEmulator()));
   }
 
   FirebaseTenantClient(

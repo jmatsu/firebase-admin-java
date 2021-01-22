@@ -19,6 +19,8 @@ package com.google.firebase.internal;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -31,7 +33,6 @@ import java.util.List;
  * OAuth2 credentials, timeout and retry settings.
  */
 public final class FirebaseRequestInitializer implements HttpRequestInitializer {
-
   private final List<HttpRequestInitializer> initializers;
 
   public FirebaseRequestInitializer(FirebaseApp app) {
@@ -39,9 +40,23 @@ public final class FirebaseRequestInitializer implements HttpRequestInitializer 
   }
 
   public FirebaseRequestInitializer(FirebaseApp app, @Nullable RetryConfig retryConfig) {
+    this(app, retryConfig, null);
+  }
+
+  public FirebaseRequestInitializer(
+          FirebaseApp app, @Nullable RetryConfig retryConfig,
+          @Nullable Supplier<GoogleCredentials> credentialsSupplier) {
+    final GoogleCredentials credentials;
+
+    if (credentialsSupplier != null) {
+      credentials = credentialsSupplier.get();
+    } else {
+      credentials = ImplFirebaseTrampolines.getCredentials(app);
+    }
+
     ImmutableList.Builder<HttpRequestInitializer> initializers =
         ImmutableList.<HttpRequestInitializer>builder()
-            .add(new HttpCredentialsAdapter(ImplFirebaseTrampolines.getCredentials(app)))
+            .add(new HttpCredentialsAdapter(credentials))
             .add(new TimeoutInitializer(app.getOptions()));
     if (retryConfig != null) {
       initializers.add(new RetryInitializer(retryConfig));

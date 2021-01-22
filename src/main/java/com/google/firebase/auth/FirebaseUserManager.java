@@ -395,7 +395,7 @@ final class FirebaseUserManager {
     return FirebaseUserManager.builder()
         .setProjectId(ImplFirebaseTrampolines.getProjectId(app))
         .setTenantId(tenantId)
-        .setHttpRequestFactory(ApiClientUtils.newAuthorizedRequestFactory(app))
+        .setHttpRequestFactory(ApiClientUtils.newAuthorizedRequestFactory(app, useEmulator()))
         .setJsonFactory(app.getOptions().getJsonFactory())
         .build();
   }

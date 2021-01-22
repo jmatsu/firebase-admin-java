@@ -19,6 +19,8 @@ package com.google.firebase.internal;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.firebase.FirebaseApp;
 
@@ -53,13 +55,45 @@ public class ApiClientUtils {
    * automatic retries.
    *
    * @param app {@link FirebaseApp} from which to obtain authorization credentials.
+   * @param useEmulator True if the built request flights to an emulator, false if it's for the real project.
+   * @return A new {@code HttpRequestFactory} instance.
+   */
+  public static HttpRequestFactory newAuthorizedRequestFactory(FirebaseApp app, boolean useEmulator) {
+    return newAuthorizedRequestFactory(app, DEFAULT_RETRY_CONFIG, useEmulator);
+  }
+
+  /**
+   * Creates a new {@code HttpRequestFactory} which provides authorization (OAuth2), timeouts and
+   * automatic retries.
+   *
+   * @param app {@link FirebaseApp} from which to obtain authorization credentials.
    * @param retryConfig {@link RetryConfig} instance or null to disable retries.
    * @return A new {@code HttpRequestFactory} instance.
    */
   public static HttpRequestFactory newAuthorizedRequestFactory(
       FirebaseApp app, @Nullable RetryConfig retryConfig) {
+    return newAuthorizedRequestFactory(app, retryConfig, false);
+  }
+
+  /**
+   * Creates a new {@code HttpRequestFactory} which provides authorization (OAuth2), timeouts and
+   * automatic retries.
+   *
+   * @param app {@link FirebaseApp} from which to obtain authorization credentials.
+   * @param retryConfig {@link RetryConfig} instance or null to disable retries.
+   * @param useEmulator True if the built request flights to an emulator, false if it's for the real project.
+   * @return A new {@code HttpRequestFactory} instance.
+   */
+  public static HttpRequestFactory newAuthorizedRequestFactory(
+          FirebaseApp app, @Nullable RetryConfig retryConfig, boolean useEmulator) {
+    final FirebaseRequestInitializer initializer;
+    if (useEmulator) {
+      initializer = new FirebaseRequestInitializer(app, retryConfig, Suppliers.<GoogleCredentials>ofInstance(new EmulatorCredentials()));
+    } else {
+      initializer = new FirebaseRequestInitializer(app, retryConfig);
+    }
     HttpTransport transport = app.getOptions().getHttpTransport();
-    return transport.createRequestFactory(new FirebaseRequestInitializer(app, retryConfig));
+    return transport.createRequestFactory(initializer);
   }
 
   public static HttpRequestFactory newUnauthorizedRequestFactory(FirebaseApp app) {
