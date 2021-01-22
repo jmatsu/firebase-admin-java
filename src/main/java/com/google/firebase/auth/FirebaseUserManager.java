@@ -71,7 +71,9 @@ final class FirebaseUserManager {
       "iss", "jti", "nbf", "nonce", "sub", "firebase");
 
   private static final String ID_TOOLKIT_URL =
-      "https://identitytoolkit.googleapis.com/%s/projects/%s";
+          "https://identitytoolkit.googleapis.com/%s/projects/%s";
+  private static final String ID_TOOLKIT_EMULATOR_URL =
+          "http://%s/identitytoolkit.googleapis.com/%s/projects/%s";
 
   private final String userMgtBaseUrl;
   private final String idpConfigMgtBaseUrl;
@@ -85,8 +87,17 @@ final class FirebaseUserManager {
             + "set the project ID explicitly via FirebaseOptions. Alternatively you can also "
             + "set the project ID via the GOOGLE_CLOUD_PROJECT environment variable.");
     this.jsonFactory = checkNotNull(builder.jsonFactory, "JsonFactory must not be null");
-    final String idToolkitUrlV1 = String.format(ID_TOOLKIT_URL, "v1", projectId);
-    final String idToolkitUrlV2 = String.format(ID_TOOLKIT_URL, "v2", projectId);
+    final String idToolkitUrlV1;
+    final String idToolkitUrlV2;
+
+    if (useEmulator()) {
+      idToolkitUrlV1 = String.format(ID_TOOLKIT_EMULATOR_URL, getEmulatorHost(), "v1", projectId);
+      idToolkitUrlV2 = String.format(ID_TOOLKIT_EMULATOR_URL, getEmulatorHost(), "v2", projectId);
+    } else {
+      idToolkitUrlV1 = String.format(ID_TOOLKIT_URL, "v1", projectId);
+      idToolkitUrlV2 = String.format(ID_TOOLKIT_URL, "v2", projectId);
+    }
+
     final String tenantId = builder.tenantId;
     if (tenantId == null) {
       this.userMgtBaseUrl = idToolkitUrlV1;
@@ -330,6 +341,14 @@ final class FirebaseUserManager {
     checkNotNull(content, "content must not be null for POST requests");
     String url = userMgtBaseUrl + path;
     return httpClient.sendRequest(HttpRequestInfo.buildJsonPostRequest(url, content), clazz);
+  }
+
+  private static String getEmulatorHost() {
+    return System.getenv("FIREBASE_AUTH_EMULATOR_HOST");
+  }
+
+  private static boolean useEmulator() {
+    return !Strings.isNullOrEmpty(getEmulatorHost());
   }
 
   static class UserImportRequest extends GenericJson {
