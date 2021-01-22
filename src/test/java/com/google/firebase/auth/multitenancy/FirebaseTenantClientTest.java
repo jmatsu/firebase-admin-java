@@ -64,7 +64,7 @@ public class FirebaseTenantClientTest {
 
   private static final String TEST_TOKEN = "token";
 
-  private static final String TEST_EMULATOR_HOST = "localhost:9000";
+  private static final String TEST_EMULATOR_HOST = "localhost:9099";
 
   private static final GoogleCredentials credentials = new MockGoogleCredentials(TEST_TOKEN);
 

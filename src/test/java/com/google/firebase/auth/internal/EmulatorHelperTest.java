@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class EmulatorHelperTest {
-  private static final String TEST_EMULATOR_HOST = "localhost:9000";
+  private static final String TEST_EMULATOR_HOST = "localhost:9099";
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
