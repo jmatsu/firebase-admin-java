@@ -68,8 +68,10 @@ final class FirebaseUserManager {
   private static final String ID_TOOLKIT_EMULATOR_URL =
           "http://%s/identitytoolkit.googleapis.com/%s/projects/%s";
 
-  private final String userMgtBaseUrl;
-  private final String idpConfigMgtBaseUrl;
+  @VisibleForTesting
+  final String userMgtBaseUrl;
+  @VisibleForTesting
+  final String idpConfigMgtBaseUrl;
   private final JsonFactory jsonFactory;
   private final AuthHttpClient httpClient;
 

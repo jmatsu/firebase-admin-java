@@ -35,15 +35,15 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.firebase.ErrorCode;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.TestOnlyImplFirebaseTrampolines;
-import com.google.firebase.auth.AuthErrorCode;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.MockGoogleCredentials;
+import com.google.firebase.auth.*;
+import com.google.firebase.auth.internal.EmulatorHelper;
 import com.google.firebase.internal.SdkUtils;
 import com.google.firebase.testing.MultiRequestMockHttpTransport;
 import com.google.firebase.testing.TestResponseInterceptor;
@@ -61,6 +61,8 @@ public class FirebaseTenantClientTest {
 
   private static final String TEST_TOKEN = "token";
 
+  private static final String TEST_EMULATOR_HOST = "localhost:9000";
+
   private static final GoogleCredentials credentials = new MockGoogleCredentials(TEST_TOKEN);
 
   private static final String PROJECT_BASE_URL =
@@ -71,6 +73,47 @@ public class FirebaseTenantClientTest {
   @After
   public void tearDown() {
     TestOnlyImplFirebaseTrampolines.clearInstancesForTest();
+  }
+
+  @Test
+  public void testUsedHost() throws Error {
+    initializeAppForTenantManagement("{}");
+
+    FirebaseTenantClient tenantClient = FirebaseAuth.getInstance().getTenantManager().getTenantClient();
+    assertTrue(tenantClient.tenantMgtBaseUrl.startsWith("https://identitytoolkit.googleapis.com/"));
+  }
+
+  @Test
+  public void testUsedHostWhenEnvIsSet() throws Error {
+    TestUtils.setEnvironmentVariables(
+            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+    try {
+      initializeAppForTenantManagement("{}");
+      String emulatorUrl = String.format("http://%s/identitytoolkit.googleapis.com/", TEST_EMULATOR_HOST);
+      FirebaseTenantClient tenantClient = FirebaseAuth.getInstance().getTenantManager().getTenantClient();
+      assertTrue(tenantClient.tenantMgtBaseUrl.startsWith(emulatorUrl));
+    } finally {
+      TestUtils.unsetEnvironmentVariables(
+              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+    }
+  }
+
+  @Test
+  public void testReplaceTokenWhenUsingEmulator() throws Exception {
+    TestUtils.setEnvironmentVariables(
+            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+    try {
+      // Use getTenant to invoke a request
+      TestResponseInterceptor interceptor = initializeAppForTenantManagement(
+              TestUtils.loadResource("tenant.json"));
+      FirebaseAuth.getInstance().getTenantManager().getTenant("TENANT_1");
+
+      HttpHeaders headers = interceptor.getResponse().getRequest().getHeaders();
+      assertEquals("Bearer owner", headers.getFirstHeaderStringValue("Authorization"));
+    } finally {
+      TestUtils.unsetEnvironmentVariables(
+              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+    }
   }
 
   @Test

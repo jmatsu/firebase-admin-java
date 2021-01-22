@@ -69,6 +69,11 @@ public final class TenantManager {
     this.tenantClient.setInterceptor(interceptor);
   }
 
+  @VisibleForTesting
+  FirebaseTenantClient getTenantClient() {
+    return tenantClient;
+  }
+
   /**
    * Gets the tenant corresponding to the specified tenant ID.
    *

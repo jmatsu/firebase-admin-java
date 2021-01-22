@@ -39,12 +39,14 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.firebase.ErrorCode;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.TestOnlyImplFirebaseTrampolines;
 import com.google.firebase.auth.FirebaseUserManager.EmailLinkType;
+import com.google.firebase.auth.internal.EmulatorHelper;
 import com.google.firebase.auth.multitenancy.TenantAwareFirebaseAuth;
 import com.google.firebase.auth.multitenancy.TenantManager;
 import com.google.firebase.internal.SdkUtils;
@@ -54,11 +56,7 @@ import com.google.firebase.testing.TestUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -69,6 +67,8 @@ public class FirebaseUserManagerTest {
   private static final JsonFactory JSON_FACTORY = Utils.getDefaultJsonFactory();
 
   private static final String TEST_TOKEN = "token";
+
+  private static final String TEST_EMULATOR_HOST = "localhost:9000";
 
   private static final GoogleCredentials credentials = new MockGoogleCredentials(TEST_TOKEN);
 
@@ -118,9 +118,51 @@ public class FirebaseUserManagerTest {
   }
 
   @Test
+  public void testUsedHost() throws Error {
+    initializeAppForUserManagement();
+    FirebaseUserManager userManager = FirebaseAuth.getInstance().getUserManager();
+    assertTrue(userManager.userMgtBaseUrl.startsWith("https://identitytoolkit.googleapis.com/"));
+    assertTrue(userManager.idpConfigMgtBaseUrl.startsWith("https://identitytoolkit.googleapis.com/"));
+  }
+
+  @Test
+  public void testUsedHostWhenEnvIsSet() throws Error {
+    TestUtils.setEnvironmentVariables(
+            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+    try {
+      initializeAppForUserManagement();
+      String emulatorUrl = String.format("http://%s/identitytoolkit.googleapis.com/", TEST_EMULATOR_HOST);
+      FirebaseUserManager userManager = FirebaseAuth.getInstance().getUserManager();
+      assertTrue(userManager.userMgtBaseUrl.startsWith(emulatorUrl));
+      assertTrue(userManager.idpConfigMgtBaseUrl.startsWith(emulatorUrl));
+    } finally {
+      TestUtils.unsetEnvironmentVariables(
+              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+    }
+  }
+
+  @Test
+  public void testReplaceTokenWhenUsingEmulator() throws Exception {
+    TestUtils.setEnvironmentVariables(
+            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+    try {
+      // Use getUser to invoke a request
+      TestResponseInterceptor interceptor = initializeAppForUserManagement(
+              TestUtils.loadResource("getUser.json"));
+      FirebaseAuth.getInstance().getUserAsync("testuser").get();
+
+      HttpHeaders headers = interceptor.getResponse().getRequest().getHeaders();
+      assertEquals("Bearer owner", headers.getFirstHeaderStringValue("Authorization"));
+    } finally {
+      TestUtils.unsetEnvironmentVariables(
+              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+    }
+  }
+
+  @Test
   public void testGetUser() throws Exception {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(
-        TestUtils.loadResource("getUser.json"));
+            TestUtils.loadResource("getUser.json"));
     UserRecord userRecord = FirebaseAuth.getInstance().getUserAsync("testuser").get();
     checkUserRecord(userRecord);
     checkRequestHeaders(interceptor);

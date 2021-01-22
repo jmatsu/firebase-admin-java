@@ -23,6 +23,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponseInterceptor;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -45,7 +46,8 @@ final class FirebaseTenantClient {
   private static final String ID_TOOLKIT_EMULATOR_URL =
           "http://%s/identitytoolkit.googleapis.com/%s/projects/%s";
 
-  private final String tenantMgtBaseUrl;
+  @VisibleForTesting
+  final String tenantMgtBaseUrl;
   private final AuthHttpClient httpClient;
 
   FirebaseTenantClient(FirebaseApp app) {
