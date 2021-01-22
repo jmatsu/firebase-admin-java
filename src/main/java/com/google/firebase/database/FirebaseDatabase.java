@@ -19,13 +19,11 @@ package com.google.firebase.database;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.auth.oauth2.AccessToken;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.ImplFirebaseTrampolines;
+import com.google.firebase.internal.EmulatorCredentials;
 import com.google.firebase.database.core.DatabaseConfig;
 import com.google.firebase.database.core.Path;
 import com.google.firebase.database.core.Repo;
@@ -38,13 +36,9 @@ import com.google.firebase.database.utilities.Validation;
 import com.google.firebase.internal.FirebaseService;
 
 import com.google.firebase.internal.SdkUtils;
-import java.io.IOException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -404,28 +398,6 @@ public class FirebaseDatabase {
     @Override
     public void destroy() {
       instance.destroy();
-    }
-  }
-
-  private static class EmulatorCredentials extends GoogleCredentials {
-
-    EmulatorCredentials() {
-      super(newToken());
-    }
-
-    private static AccessToken newToken() {
-      return new AccessToken("owner",
-          new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)));
-    }
-
-    @Override
-    public AccessToken refreshAccessToken() {
-      return newToken();
-    }
-
-    @Override
-    public Map<String, List<String>> getRequestMetadata() throws IOException {
-      return ImmutableMap.of();
     }
   }
 }
