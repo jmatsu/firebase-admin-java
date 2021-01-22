@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+
 import com.google.api.client.googleapis.util.Utils;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -56,7 +57,11 @@ import com.google.firebase.testing.TestUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -73,17 +78,17 @@ public class FirebaseUserManagerTest {
   private static final GoogleCredentials credentials = new MockGoogleCredentials(TEST_TOKEN);
 
   private static final ActionCodeSettings ACTION_CODE_SETTINGS = ActionCodeSettings.builder()
-          .setUrl("https://example.dynamic.link")
-          .setHandleCodeInApp(true)
-          .setDynamicLinkDomain("custom.page.link")
-          .setIosBundleId("com.example.ios")
-          .setAndroidPackageName("com.example.android")
-          .setAndroidInstallApp(true)
-          .setAndroidMinimumVersion("6")
-          .build();
+      .setUrl("https://example.dynamic.link")
+      .setHandleCodeInApp(true)
+      .setDynamicLinkDomain("custom.page.link")
+      .setIosBundleId("com.example.ios")
+      .setAndroidPackageName("com.example.android")
+      .setAndroidInstallApp(true)
+      .setAndroidMinimumVersion("6")
+      .build();
 
   private static final Map<String, Object> ACTION_CODE_SETTINGS_MAP =
-          ACTION_CODE_SETTINGS.getProperties();
+      ACTION_CODE_SETTINGS.getProperties();
 
   private static final String PROJECT_BASE_URL =
       "https://identitytoolkit.googleapis.com/v2/projects/test-project-id";
@@ -102,8 +107,8 @@ public class FirebaseUserManagerTest {
   @Test
   public void testProjectIdRequired() {
     FirebaseApp.initializeApp(FirebaseOptions.builder()
-            .setCredentials(credentials)
-            .build());
+        .setCredentials(credentials)
+        .build());
     FirebaseAuth auth = FirebaseAuth.getInstance();
     try {
       auth.getUserManager();
@@ -122,47 +127,49 @@ public class FirebaseUserManagerTest {
     initializeAppForUserManagement();
     FirebaseUserManager userManager = FirebaseAuth.getInstance().getUserManager();
     assertTrue(userManager.userMgtBaseUrl.startsWith("https://identitytoolkit.googleapis.com/"));
-    assertTrue(userManager.idpConfigMgtBaseUrl.startsWith("https://identitytoolkit.googleapis.com/"));
+    assertTrue(
+        userManager.idpConfigMgtBaseUrl.startsWith("https://identitytoolkit.googleapis.com/"));
   }
 
   @Test
   public void testUsedHostWhenEnvIsSet() throws Error {
     TestUtils.setEnvironmentVariables(
-            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+        ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
     try {
       initializeAppForUserManagement();
-      String emulatorUrl = String.format("http://%s/identitytoolkit.googleapis.com/", TEST_EMULATOR_HOST);
+      String emulatorUrl =
+          String.format("http://%s/identitytoolkit.googleapis.com/", TEST_EMULATOR_HOST);
       FirebaseUserManager userManager = FirebaseAuth.getInstance().getUserManager();
       assertTrue(userManager.userMgtBaseUrl.startsWith(emulatorUrl));
       assertTrue(userManager.idpConfigMgtBaseUrl.startsWith(emulatorUrl));
     } finally {
       TestUtils.unsetEnvironmentVariables(
-              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+          ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
     }
   }
 
   @Test
   public void testReplaceTokenWhenUsingEmulator() throws Exception {
     TestUtils.setEnvironmentVariables(
-            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+        ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
     try {
       // Use getUser to invoke a request
       TestResponseInterceptor interceptor = initializeAppForUserManagement(
-              TestUtils.loadResource("getUser.json"));
+          TestUtils.loadResource("getUser.json"));
       FirebaseAuth.getInstance().getUserAsync("testuser").get();
 
       HttpHeaders headers = interceptor.getResponse().getRequest().getHeaders();
       assertEquals("Bearer owner", headers.getFirstHeaderStringValue("Authorization"));
     } finally {
       TestUtils.unsetEnvironmentVariables(
-              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+          ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
     }
   }
 
   @Test
   public void testGetUser() throws Exception {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(
-            TestUtils.loadResource("getUser.json"));
+        TestUtils.loadResource("getUser.json"));
     UserRecord userRecord = FirebaseAuth.getInstance().getUserAsync("testuser").get();
     checkUserRecord(userRecord);
     checkRequestHeaders(interceptor);
@@ -247,8 +254,8 @@ public class FirebaseUserManagerTest {
   @Test
   public void testGetUsersExceeds100() throws Exception {
     FirebaseApp.initializeApp(FirebaseOptions.builder()
-            .setCredentials(credentials)
-            .build());
+        .setCredentials(credentials)
+        .build());
     List<UserIdentifier> identifiers = new ArrayList<>();
     for (int i = 0; i < 101; i++) {
       identifiers.add(new UidIdentifier("uid_" + i));
@@ -265,8 +272,8 @@ public class FirebaseUserManagerTest {
   @Test
   public void testGetUsersNull() throws Exception {
     FirebaseApp.initializeApp(FirebaseOptions.builder()
-            .setCredentials(credentials)
-            .build());
+        .setCredentials(credentials)
+        .build());
     try {
       FirebaseAuth.getInstance().getUsers(null);
       fail("No error thrown for null identifiers");
@@ -320,7 +327,7 @@ public class FirebaseUserManagerTest {
         + "        }] "
         + "    }] "
         + "} "
-        ).replace("'", "\""));
+    ).replace("'", "\""));
 
     UidIdentifier doesntExist = new UidIdentifier("this-uid-doesnt-exist");
     List<UserIdentifier> ids = ImmutableList.of(
@@ -500,8 +507,8 @@ public class FirebaseUserManagerTest {
   @Test
   public void testDeleteUsersExceeds1000() {
     FirebaseApp.initializeApp(FirebaseOptions.builder()
-            .setCredentials(credentials)
-            .build());
+        .setCredentials(credentials)
+        .build());
     List<String> ids = new ArrayList<>();
     for (int i = 0; i < 1001; i++) {
       ids.add("id" + i);
@@ -517,8 +524,8 @@ public class FirebaseUserManagerTest {
   @Test
   public void testDeleteUsersInvalidId() {
     FirebaseApp.initializeApp(FirebaseOptions.builder()
-            .setCredentials(credentials)
-            .build());
+        .setCredentials(credentials)
+        .build());
     try {
       FirebaseAuth.getInstance().deleteUsersAsync(
           ImmutableList.of("too long " + Strings.repeat(".", 128)));
@@ -542,11 +549,11 @@ public class FirebaseUserManagerTest {
         + "        'message': 'something awful' "
         + "    }] "
         + "} "
-        ).replace("'", "\""));
+    ).replace("'", "\""));
 
     DeleteUsersResult result = FirebaseAuth.getInstance().deleteUsersAsync(ImmutableList.of(
-          "uid1", "uid2", "uid3", "uid4"
-          )).get();
+        "uid1", "uid2", "uid3", "uid4"
+    )).get();
 
     assertEquals(2, result.getSuccessCount());
     assertEquals(2, result.getFailureCount());
@@ -564,8 +571,8 @@ public class FirebaseUserManagerTest {
     initializeAppForUserManagement("{}");
 
     DeleteUsersResult result = FirebaseAuth.getInstance().deleteUsersAsync(ImmutableList.of(
-          "uid1", "uid2", "uid3"
-          )).get();
+        "uid1", "uid2", "uid3"
+    )).get();
 
     assertEquals(3, result.getSuccessCount());
     assertEquals(0, result.getFailureCount());
@@ -870,7 +877,7 @@ public class FirebaseUserManagerTest {
       try {
         operation.call(auth);
         fail("No error thrown for HTTP error");
-      }  catch (ExecutionException e) {
+      } catch (ExecutionException e) {
         assertThat(e.getCause().toString(), e.getCause(), instanceOf(FirebaseAuthException.class));
         FirebaseAuthException authException = (FirebaseAuthException) e.getCause();
         assertEquals(ErrorCode.NOT_FOUND, authException.getErrorCode());
@@ -890,7 +897,7 @@ public class FirebaseUserManagerTest {
       try {
         operation.call(auth);
         fail("No error thrown for HTTP error");
-      }  catch (ExecutionException e) {
+      } catch (ExecutionException e) {
         assertTrue(e.getCause().toString(), e.getCause() instanceof FirebaseAuthException);
         FirebaseAuthException authException = (FirebaseAuthException) e.getCause();
         assertEquals(ErrorCode.NOT_FOUND, authException.getErrorCode());
@@ -910,7 +917,7 @@ public class FirebaseUserManagerTest {
     try {
       FirebaseAuth.getInstance().getUserAsync("testuser").get();
       fail("No error thrown for JSON error");
-    }  catch (ExecutionException e) {
+    } catch (ExecutionException e) {
       assertThat(e.getCause(), instanceOf(FirebaseAuthException.class));
       FirebaseAuthException authException = (FirebaseAuthException) e.getCause();
       assertEquals(ErrorCode.UNKNOWN, authException.getErrorCode());
@@ -931,7 +938,7 @@ public class FirebaseUserManagerTest {
     try {
       auth.getUserAsync("testuser").get();
       fail("No error thrown for JSON error");
-    }  catch (ExecutionException e) {
+    } catch (ExecutionException e) {
       assertThat(e.getCause(), instanceOf(FirebaseAuthException.class));
       FirebaseAuthException authException = (FirebaseAuthException) e.getCause();
       assertEquals(ErrorCode.INTERNAL, authException.getErrorCode());
@@ -1332,9 +1339,9 @@ public class FirebaseUserManagerTest {
   @Test
   public void testGeneratePasswordResetLinkWithSettings() throws Exception {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(
-            TestUtils.loadResource("generateEmailLink.json"));
+        TestUtils.loadResource("generateEmailLink.json"));
     String link = FirebaseAuth.getInstance()
-            .generatePasswordResetLinkAsync("test@example.com", ACTION_CODE_SETTINGS).get();
+        .generatePasswordResetLinkAsync("test@example.com", ACTION_CODE_SETTINGS).get();
     assertEquals("https://mock-oob-link.for.auth.tests", link);
     checkRequestHeaders(interceptor);
 
@@ -1351,9 +1358,9 @@ public class FirebaseUserManagerTest {
   @Test
   public void testGeneratePasswordResetLink() throws Exception {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(
-            TestUtils.loadResource("generateEmailLink.json"));
+        TestUtils.loadResource("generateEmailLink.json"));
     String link = FirebaseAuth.getInstance()
-            .generatePasswordResetLinkAsync("test@example.com").get();
+        .generatePasswordResetLinkAsync("test@example.com").get();
     assertEquals("https://mock-oob-link.for.auth.tests", link);
     checkRequestHeaders(interceptor);
 
@@ -1559,7 +1566,7 @@ public class FirebaseUserManagerTest {
             .setClientId("CLIENT_ID")
             .setIssuer("https://oidc.com/issuer");
 
-    OidcProviderConfig config = 
+    OidcProviderConfig config =
         FirebaseAuth.getInstance().createOidcProviderConfigAsync(createRequest).get();
 
     checkOidcProviderConfig(config, "oidc.provider-id");
@@ -2068,15 +2075,15 @@ public class FirebaseUserManagerTest {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(SAML_RESPONSE);
     SamlProviderConfig.CreateRequest createRequest =
         new SamlProviderConfig.CreateRequest()
-          .setProviderId("saml.provider-id")
-          .setDisplayName("DISPLAY_NAME")
-          .setEnabled(true)
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login")
-          .addX509Certificate("certificate1")
-          .addX509Certificate("certificate2")
-          .setRpEntityId("RP_ENTITY_ID")
-          .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
+            .setProviderId("saml.provider-id")
+            .setDisplayName("DISPLAY_NAME")
+            .setEnabled(true)
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login")
+            .addX509Certificate("certificate1")
+            .addX509Certificate("certificate2")
+            .setRpEntityId("RP_ENTITY_ID")
+            .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
 
     SamlProviderConfig config = FirebaseAuth.getInstance().createSamlProviderConfig(createRequest);
 
@@ -2113,15 +2120,15 @@ public class FirebaseUserManagerTest {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(SAML_RESPONSE);
     SamlProviderConfig.CreateRequest createRequest =
         new SamlProviderConfig.CreateRequest()
-          .setProviderId("saml.provider-id")
-          .setDisplayName("DISPLAY_NAME")
-          .setEnabled(true)
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login")
-          .addX509Certificate("certificate1")
-          .addX509Certificate("certificate2")
-          .setRpEntityId("RP_ENTITY_ID")
-          .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
+            .setProviderId("saml.provider-id")
+            .setDisplayName("DISPLAY_NAME")
+            .setEnabled(true)
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login")
+            .addX509Certificate("certificate1")
+            .addX509Certificate("certificate2")
+            .setRpEntityId("RP_ENTITY_ID")
+            .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
 
     SamlProviderConfig config =
         FirebaseAuth.getInstance().createSamlProviderConfigAsync(createRequest).get();
@@ -2161,12 +2168,12 @@ public class FirebaseUserManagerTest {
     // provider config creation request.
     SamlProviderConfig.CreateRequest createRequest =
         new SamlProviderConfig.CreateRequest()
-          .setProviderId("saml.provider-id")
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login")
-          .addX509Certificate("certificate")
-          .setRpEntityId("RP_ENTITY_ID")
-          .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
+            .setProviderId("saml.provider-id")
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login")
+            .addX509Certificate("certificate")
+            .setRpEntityId("RP_ENTITY_ID")
+            .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
 
     FirebaseAuth.getInstance().createSamlProviderConfig(createRequest);
 
@@ -2223,14 +2230,14 @@ public class FirebaseUserManagerTest {
     initializeAppForUserManagement(SAML_RESPONSE);
     SamlProviderConfig.CreateRequest createRequest =
         new SamlProviderConfig.CreateRequest()
-          .setDisplayName("DISPLAY_NAME")
-          .setEnabled(true)
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login")
-          .addX509Certificate("certificate1")
-          .addX509Certificate("certificate2")
-          .setRpEntityId("RP_ENTITY_ID")
-          .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
+            .setDisplayName("DISPLAY_NAME")
+            .setEnabled(true)
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login")
+            .addX509Certificate("certificate1")
+            .addX509Certificate("certificate2")
+            .setRpEntityId("RP_ENTITY_ID")
+            .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
     try {
       FirebaseAuth.getInstance().createSamlProviderConfig(createRequest);
       fail("No error thrown for invalid response");
@@ -2245,15 +2252,15 @@ public class FirebaseUserManagerTest {
         "TENANT_ID", SAML_RESPONSE);
     SamlProviderConfig.CreateRequest createRequest =
         new SamlProviderConfig.CreateRequest()
-          .setProviderId("saml.provider-id")
-          .setDisplayName("DISPLAY_NAME")
-          .setEnabled(true)
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login")
-          .addX509Certificate("certificate1")
-          .addX509Certificate("certificate2")
-          .setRpEntityId("RP_ENTITY_ID")
-          .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
+            .setProviderId("saml.provider-id")
+            .setDisplayName("DISPLAY_NAME")
+            .setEnabled(true)
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login")
+            .addX509Certificate("certificate1")
+            .addX509Certificate("certificate2")
+            .setRpEntityId("RP_ENTITY_ID")
+            .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
     TenantAwareFirebaseAuth tenantAwareAuth =
         FirebaseAuth.getInstance().getTenantManager().getAuthForTenant("TENANT_ID");
 
@@ -2268,14 +2275,14 @@ public class FirebaseUserManagerTest {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(SAML_RESPONSE);
     SamlProviderConfig.UpdateRequest updateRequest =
         new SamlProviderConfig.UpdateRequest("saml.provider-id")
-          .setDisplayName("DISPLAY_NAME")
-          .setEnabled(true)
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login")
-          .addX509Certificate("certificate1")
-          .addX509Certificate("certificate2")
-          .setRpEntityId("RP_ENTITY_ID")
-          .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
+            .setDisplayName("DISPLAY_NAME")
+            .setEnabled(true)
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login")
+            .addX509Certificate("certificate1")
+            .addX509Certificate("certificate2")
+            .setRpEntityId("RP_ENTITY_ID")
+            .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
 
     SamlProviderConfig config = FirebaseAuth.getInstance().updateSamlProviderConfig(updateRequest);
 
@@ -2285,7 +2292,7 @@ public class FirebaseUserManagerTest {
     GenericUrl url = interceptor.getResponse().getRequest().getUrl();
     assertEquals(
         "displayName,enabled,idpConfig.idpCertificates,idpConfig.idpEntityId,idpConfig.ssoUrl,"
-          + "spConfig.callbackUri,spConfig.spEntityId",
+            + "spConfig.callbackUri,spConfig.spEntityId",
         url.getFirst("updateMask"));
 
     GenericJson parsed = parseRequestContent(interceptor);
@@ -2315,14 +2322,14 @@ public class FirebaseUserManagerTest {
     TestResponseInterceptor interceptor = initializeAppForUserManagement(SAML_RESPONSE);
     SamlProviderConfig.UpdateRequest updateRequest =
         new SamlProviderConfig.UpdateRequest("saml.provider-id")
-          .setDisplayName("DISPLAY_NAME")
-          .setEnabled(true)
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login")
-          .addX509Certificate("certificate1")
-          .addX509Certificate("certificate2")
-          .setRpEntityId("RP_ENTITY_ID")
-          .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
+            .setDisplayName("DISPLAY_NAME")
+            .setEnabled(true)
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login")
+            .addX509Certificate("certificate1")
+            .addX509Certificate("certificate2")
+            .setRpEntityId("RP_ENTITY_ID")
+            .setCallbackUrl("https://projectId.firebaseapp.com/__/auth/handler");
 
     SamlProviderConfig config =
         FirebaseAuth.getInstance().updateSamlProviderConfigAsync(updateRequest).get();
@@ -2333,7 +2340,7 @@ public class FirebaseUserManagerTest {
     GenericUrl url = interceptor.getResponse().getRequest().getUrl();
     assertEquals(
         "displayName,enabled,idpConfig.idpCertificates,idpConfig.idpEntityId,idpConfig.ssoUrl,"
-          + "spConfig.callbackUri,spConfig.spEntityId",
+            + "spConfig.callbackUri,spConfig.spEntityId",
         url.getFirst("updateMask"));
 
     GenericJson parsed = parseRequestContent(interceptor);
@@ -2420,10 +2427,10 @@ public class FirebaseUserManagerTest {
         FirebaseAuth.getInstance().getTenantManager().getAuthForTenant("TENANT_ID");
     SamlProviderConfig.UpdateRequest updateRequest =
         new SamlProviderConfig.UpdateRequest("saml.provider-id")
-          .setDisplayName("DISPLAY_NAME")
-          .setEnabled(true)
-          .setIdpEntityId("IDP_ENTITY_ID")
-          .setSsoUrl("https://example.com/login");
+            .setDisplayName("DISPLAY_NAME")
+            .setEnabled(true)
+            .setIdpEntityId("IDP_ENTITY_ID")
+            .setSsoUrl("https://example.com/login");
 
     SamlProviderConfig config = tenantAwareAuth.updateSamlProviderConfig(updateRequest);
 
@@ -2725,8 +2732,9 @@ public class FirebaseUserManagerTest {
     FirebaseApp.initializeApp(FirebaseOptions.builder()
         .setCredentials(credentials)
         .setHttpTransport(
-          new MockHttpTransport.Builder().setLowLevelHttpResponse(
-            new MockLowLevelHttpResponse().setContent(response).setStatusCode(statusCode)).build())
+            new MockHttpTransport.Builder().setLowLevelHttpResponse(
+                new MockLowLevelHttpResponse().setContent(response).setStatusCode(statusCode))
+                .build())
         .setProjectId("test-project-id")
         .build());
     TestResponseInterceptor interceptor = new TestResponseInterceptor();
@@ -2739,7 +2747,7 @@ public class FirebaseUserManagerTest {
       String... responses) {
     initializeAppWithResponses(responses);
     TestResponseInterceptor interceptor = new TestResponseInterceptor();
-    TenantManager tenantManager =  FirebaseAuth.getInstance().getTenantManager();
+    TenantManager tenantManager = FirebaseAuth.getInstance().getTenantManager();
     AbstractFirebaseAuth auth = tenantManager.getAuthForTenant(tenantId);
     auth.getUserManager().setInterceptor(interceptor);
     return interceptor;
@@ -2791,7 +2799,7 @@ public class FirebaseUserManagerTest {
                 .setJsonFactory(Utils.getDefaultJsonFactory())
                 .build();
           }
-          })
+        })
         .build();
   }
 

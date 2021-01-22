@@ -19,6 +19,7 @@ package com.google.firebase.auth;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponseInterceptor;
 import com.google.api.client.json.GenericJson;
@@ -33,7 +34,15 @@ import com.google.firebase.ErrorCode;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.ImplFirebaseTrampolines;
 import com.google.firebase.IncomingHttpResponse;
-import com.google.firebase.auth.internal.*;
+import com.google.firebase.auth.internal.AuthHttpClient;
+import com.google.firebase.auth.internal.BatchDeleteResponse;
+import com.google.firebase.auth.internal.DownloadAccountResponse;
+import com.google.firebase.auth.internal.EmulatorHelper;
+import com.google.firebase.auth.internal.GetAccountInfoRequest;
+import com.google.firebase.auth.internal.GetAccountInfoResponse;
+import com.google.firebase.auth.internal.ListOidcProviderConfigsResponse;
+import com.google.firebase.auth.internal.ListSamlProviderConfigsResponse;
+import com.google.firebase.auth.internal.UploadAccountResponse;
 import com.google.firebase.internal.ApiClientUtils;
 import com.google.firebase.internal.HttpRequestInfo;
 import com.google.firebase.internal.NonNull;
@@ -49,7 +58,7 @@ import java.util.Set;
  * REST API. This class does not hold any mutable state, and is thread safe.
  *
  * @see <a href="https://developers.google.com/identity/toolkit/web/reference/relyingparty">
- *   Google Identity Toolkit</a>
+ * Google Identity Toolkit</a>
  */
 final class FirebaseUserManager {
 
@@ -64,9 +73,9 @@ final class FirebaseUserManager {
       "iss", "jti", "nbf", "nonce", "sub", "firebase");
 
   private static final String ID_TOOLKIT_URL =
-          "https://identitytoolkit.googleapis.com/%s/projects/%s";
+      "https://identitytoolkit.googleapis.com/%s/projects/%s";
   private static final String ID_TOOLKIT_EMULATOR_URL =
-          "http://%s/identitytoolkit.googleapis.com/%s/projects/%s";
+      "http://%s/identitytoolkit.googleapis.com/%s/projects/%s";
 
   @VisibleForTesting
   final String userMgtBaseUrl;
@@ -86,8 +95,10 @@ final class FirebaseUserManager {
     final String idToolkitUrlV2;
 
     if (EmulatorHelper.useEmulator()) {
-      idToolkitUrlV1 = String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v1", projectId);
-      idToolkitUrlV2 = String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v2", projectId);
+      idToolkitUrlV1 =
+          String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v1", projectId);
+      idToolkitUrlV2 =
+          String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v2", projectId);
     } else {
       idToolkitUrlV1 = String.format(ID_TOOLKIT_URL, "v1", projectId);
       idToolkitUrlV2 = String.format(ID_TOOLKIT_URL, "v2", projectId);
@@ -192,12 +203,12 @@ final class FirebaseUserManager {
   UserImportResult importUsers(UserImportRequest request) throws FirebaseAuthException {
     checkNotNull(request);
     UploadAccountResponse response = post(
-            "/accounts:batchCreate", request, UploadAccountResponse.class);
+        "/accounts:batchCreate", request, UploadAccountResponse.class);
     return new UserImportResult(request.getUsersCount(), response);
   }
 
   String createSessionCookie(String idToken,
-      SessionCookieOptions options) throws FirebaseAuthException {
+                             SessionCookieOptions options) throws FirebaseAuthException {
     final Map<String, Object> payload = ImmutableMap.<String, Object>of(
         "idToken", idToken, "validDuration", options.getExpiresInSeconds());
     GenericJson response = post(":createSessionCookie", payload, GenericJson.class);
@@ -205,11 +216,11 @@ final class FirebaseUserManager {
   }
 
   String getEmailActionLink(EmailLinkType type, String email,
-      @Nullable ActionCodeSettings settings) throws FirebaseAuthException {
+                            @Nullable ActionCodeSettings settings) throws FirebaseAuthException {
     ImmutableMap.Builder<String, Object> payload = ImmutableMap.<String, Object>builder()
-            .put("requestType", type.name())
-            .put("email", email)
-            .put("returnOobLink", true);
+        .put("requestType", type.name())
+        .put("email", email)
+        .put("returnOobLink", true);
     if (settings != null) {
       payload.putAll(settings.getProperties());
     }
@@ -344,7 +355,7 @@ final class FirebaseUserManager {
     private final List<Map<String, Object>> users;
 
     UserImportRequest(List<ImportUserRecord> users, UserImportOptions options,
-        JsonFactory jsonFactory) {
+                      JsonFactory jsonFactory) {
       checkArgument(users != null && !users.isEmpty(), "users must not be null or empty");
       checkArgument(users.size() <= FirebaseUserManager.MAX_IMPORT_USERS,
           "users list must not contain more than %s items", FirebaseUserManager.MAX_IMPORT_USERS);
@@ -382,7 +393,8 @@ final class FirebaseUserManager {
     return FirebaseUserManager.builder()
         .setProjectId(ImplFirebaseTrampolines.getProjectId(app))
         .setTenantId(tenantId)
-        .setHttpRequestFactory(ApiClientUtils.newAuthorizedRequestFactory(app, EmulatorHelper.useEmulator()))
+        .setHttpRequestFactory(
+            ApiClientUtils.newAuthorizedRequestFactory(app, EmulatorHelper.useEmulator()))
         .setJsonFactory(app.getOptions().getJsonFactory())
         .build();
   }
@@ -398,7 +410,8 @@ final class FirebaseUserManager {
     private HttpRequestFactory requestFactory;
     private JsonFactory jsonFactory;
 
-    private Builder() { }
+    private Builder() {
+    }
 
     public Builder setProjectId(String projectId) {
       this.projectId = projectId;

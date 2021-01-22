@@ -23,7 +23,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.firebase.FirebaseApp;
-
 import java.io.IOException;
 
 /**
@@ -37,7 +36,8 @@ public class ApiClientUtils {
       .setMaxIntervalMillis(60 * 1000)
       .build();
 
-  private ApiClientUtils() { }
+  private ApiClientUtils() {
+  }
 
   /**
    * Creates a new {@code HttpRequestFactory} which provides authorization (OAuth2), timeouts and
@@ -54,11 +54,12 @@ public class ApiClientUtils {
    * Creates a new {@code HttpRequestFactory} which provides authorization (OAuth2), timeouts and
    * automatic retries.
    *
-   * @param app {@link FirebaseApp} from which to obtain authorization credentials.
-   * @param useEmulator True if the built request flights to an emulator, false if it's for the real project.
+   * @param app         {@link FirebaseApp} from which to obtain authorization credentials.
+   * @param useEmulator True if the request is for an emulator, false if it's for the real project.
    * @return A new {@code HttpRequestFactory} instance.
    */
-  public static HttpRequestFactory newAuthorizedRequestFactory(FirebaseApp app, boolean useEmulator) {
+  public static HttpRequestFactory newAuthorizedRequestFactory(FirebaseApp app,
+                                                               boolean useEmulator) {
     return newAuthorizedRequestFactory(app, DEFAULT_RETRY_CONFIG, useEmulator);
   }
 
@@ -66,7 +67,7 @@ public class ApiClientUtils {
    * Creates a new {@code HttpRequestFactory} which provides authorization (OAuth2), timeouts and
    * automatic retries.
    *
-   * @param app {@link FirebaseApp} from which to obtain authorization credentials.
+   * @param app         {@link FirebaseApp} from which to obtain authorization credentials.
    * @param retryConfig {@link RetryConfig} instance or null to disable retries.
    * @return A new {@code HttpRequestFactory} instance.
    */
@@ -79,16 +80,17 @@ public class ApiClientUtils {
    * Creates a new {@code HttpRequestFactory} which provides authorization (OAuth2), timeouts and
    * automatic retries.
    *
-   * @param app {@link FirebaseApp} from which to obtain authorization credentials.
+   * @param app         {@link FirebaseApp} from which to obtain authorization credentials.
    * @param retryConfig {@link RetryConfig} instance or null to disable retries.
-   * @param useEmulator True if the built request flights to an emulator, false if it's for the real project.
+   * @param useEmulator True if the request is for an emulator, false if it's for the real project.
    * @return A new {@code HttpRequestFactory} instance.
    */
   public static HttpRequestFactory newAuthorizedRequestFactory(
-          FirebaseApp app, @Nullable RetryConfig retryConfig, boolean useEmulator) {
+      FirebaseApp app, @Nullable RetryConfig retryConfig, boolean useEmulator) {
     final FirebaseRequestInitializer initializer;
     if (useEmulator) {
-      initializer = new FirebaseRequestInitializer(app, retryConfig, Suppliers.<GoogleCredentials>ofInstance(new EmulatorCredentials()));
+      initializer = new FirebaseRequestInitializer(app, retryConfig,
+          Suppliers.<GoogleCredentials>ofInstance(new EmulatorCredentials()));
     } else {
       initializer = new FirebaseRequestInitializer(app, retryConfig);
     }

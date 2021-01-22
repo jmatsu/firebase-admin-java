@@ -19,6 +19,7 @@ package com.google.firebase.auth.multitenancy;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponseInterceptor;
 import com.google.api.client.json.GenericJson;
@@ -44,7 +45,7 @@ final class FirebaseTenantClient {
   private static final String ID_TOOLKIT_URL =
       "https://identitytoolkit.googleapis.com/%s/projects/%s";
   private static final String ID_TOOLKIT_EMULATOR_URL =
-          "http://%s/identitytoolkit.googleapis.com/%s/projects/%s";
+      "http://%s/identitytoolkit.googleapis.com/%s/projects/%s";
 
   @VisibleForTesting
   final String tenantMgtBaseUrl;
@@ -64,7 +65,8 @@ final class FirebaseTenantClient {
             + "set the project ID explicitly via FirebaseOptions. Alternatively you can also "
             + "set the project ID via the GOOGLE_CLOUD_PROJECT environment variable.");
     if (EmulatorHelper.useEmulator()) {
-      this.tenantMgtBaseUrl = String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v2", projectId);
+      this.tenantMgtBaseUrl =
+          String.format(ID_TOOLKIT_EMULATOR_URL, EmulatorHelper.getEmulatorHost(), "v2", projectId);
     } else {
       this.tenantMgtBaseUrl = String.format(ID_TOOLKIT_URL, "v2", projectId);
     }

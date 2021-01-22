@@ -6,19 +6,19 @@ import com.google.firebase.internal.Nullable;
 
 public final class EmulatorHelper {
 
-    private EmulatorHelper() {
-    }
+  private EmulatorHelper() {
+  }
 
-    @VisibleForTesting
-    public static final String FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR =
-            "FIREBASE_AUTH_EMULATOR_HOST";
+  @VisibleForTesting
+  public static final String FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR =
+      "FIREBASE_AUTH_EMULATOR_HOST";
 
-    @Nullable
-    public static String getEmulatorHost() {
-        return System.getenv(FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR);
-    }
+  @Nullable
+  public static String getEmulatorHost() {
+    return System.getenv(FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR);
+  }
 
-    public static boolean useEmulator() {
-        return !Strings.isNullOrEmpty(getEmulatorHost());
-    }
+  public static boolean useEmulator() {
+    return !Strings.isNullOrEmpty(getEmulatorHost());
+  }
 }

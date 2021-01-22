@@ -19,11 +19,11 @@ package com.google.firebase.database;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+
 import com.google.common.base.Strings;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.ImplFirebaseTrampolines;
-import com.google.firebase.internal.EmulatorCredentials;
 import com.google.firebase.database.core.DatabaseConfig;
 import com.google.firebase.database.core.Path;
 import com.google.firebase.database.core.Repo;
@@ -33,8 +33,8 @@ import com.google.firebase.database.util.EmulatorHelper;
 import com.google.firebase.database.utilities.ParsedUrl;
 import com.google.firebase.database.utilities.Utilities;
 import com.google.firebase.database.utilities.Validation;
+import com.google.firebase.internal.EmulatorCredentials;
 import com.google.firebase.internal.FirebaseService;
-
 import com.google.firebase.internal.SdkUtils;
 import java.util.Collections;
 import java.util.HashMap;
@@ -159,7 +159,9 @@ public class FirebaseDatabase {
     return database;
   }
 
-  /** This exists so Repo can create FirebaseDatabase objects to keep legacy tests working. */
+  /**
+   * This exists so Repo can create FirebaseDatabase objects to keep legacy tests working.
+   */
   static FirebaseDatabase createForTests(
       FirebaseApp app, RepoInfo repoInfo, DatabaseConfig config) {
     FirebaseDatabase db = new FirebaseDatabase(app, repoInfo, config);

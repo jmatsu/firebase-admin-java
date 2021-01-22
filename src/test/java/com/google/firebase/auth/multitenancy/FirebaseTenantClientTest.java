@@ -19,10 +19,10 @@ package com.google.firebase.auth.multitenancy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 
 import com.google.api.client.googleapis.util.Utils;
 import com.google.api.client.http.GenericUrl;
@@ -42,7 +42,10 @@ import com.google.firebase.ErrorCode;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.TestOnlyImplFirebaseTrampolines;
-import com.google.firebase.auth.*;
+import com.google.firebase.auth.AuthErrorCode;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.MockGoogleCredentials;
 import com.google.firebase.auth.internal.EmulatorHelper;
 import com.google.firebase.internal.SdkUtils;
 import com.google.firebase.testing.MultiRequestMockHttpTransport;
@@ -79,40 +82,43 @@ public class FirebaseTenantClientTest {
   public void testUsedHost() throws Error {
     initializeAppForTenantManagement("{}");
 
-    FirebaseTenantClient tenantClient = FirebaseAuth.getInstance().getTenantManager().getTenantClient();
+    FirebaseTenantClient tenantClient =
+        FirebaseAuth.getInstance().getTenantManager().getTenantClient();
     assertTrue(tenantClient.tenantMgtBaseUrl.startsWith("https://identitytoolkit.googleapis.com/"));
   }
 
   @Test
   public void testUsedHostWhenEnvIsSet() throws Error {
     TestUtils.setEnvironmentVariables(
-            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+        ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
     try {
       initializeAppForTenantManagement("{}");
-      String emulatorUrl = String.format("http://%s/identitytoolkit.googleapis.com/", TEST_EMULATOR_HOST);
-      FirebaseTenantClient tenantClient = FirebaseAuth.getInstance().getTenantManager().getTenantClient();
+      String emulatorUrl =
+          String.format("http://%s/identitytoolkit.googleapis.com/", TEST_EMULATOR_HOST);
+      FirebaseTenantClient tenantClient =
+          FirebaseAuth.getInstance().getTenantManager().getTenantClient();
       assertTrue(tenantClient.tenantMgtBaseUrl.startsWith(emulatorUrl));
     } finally {
       TestUtils.unsetEnvironmentVariables(
-              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+          ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
     }
   }
 
   @Test
   public void testReplaceTokenWhenUsingEmulator() throws Exception {
     TestUtils.setEnvironmentVariables(
-            ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
+        ImmutableMap.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR, TEST_EMULATOR_HOST));
     try {
       // Use getTenant to invoke a request
       TestResponseInterceptor interceptor = initializeAppForTenantManagement(
-              TestUtils.loadResource("tenant.json"));
+          TestUtils.loadResource("tenant.json"));
       FirebaseAuth.getInstance().getTenantManager().getTenant("TENANT_1");
 
       HttpHeaders headers = interceptor.getResponse().getRequest().getHeaders();
       assertEquals("Bearer owner", headers.getFirstHeaderStringValue("Authorization"));
     } finally {
       TestUtils.unsetEnvironmentVariables(
-              ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
+          ImmutableSet.of(EmulatorHelper.FIREBASE_AUTH_EMULATOR_HOST_ENV_VAR));
     }
   }
 
@@ -401,7 +407,7 @@ public class FirebaseTenantClientTest {
         .setHttpTransport(
             new MockHttpTransport.Builder()
                 .setLowLevelHttpResponse(
-                  new MockLowLevelHttpResponse().setContent(response).setStatusCode(statusCode))
+                    new MockLowLevelHttpResponse().setContent(response).setStatusCode(statusCode))
                 .build())
         .setProjectId("test-project-id")
         .build());
